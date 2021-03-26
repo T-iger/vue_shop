@@ -12,8 +12,8 @@ import 'element-ui/lib/theme-chalk/index.css'
 
 Vue.use(ElementUI)
 
-/*import vRegion from 'v-region'
-Vue.use(vRegion)*/
+// import vRegion from 'v-region'
+// Vue.use(vRegion)
 
 // 配置请求路径
 axios.defaults.baseURL = 'http://127.0.0.1:9999'
