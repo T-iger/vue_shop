@@ -75,9 +75,10 @@
     methods: {
       // 获取菜单list
       async getMenuList () {
-        const { data: res } = await this.$http.get('menuList')
+        const { data: res } = await this.$http.get('/menu/menuList').catch(err => {
+          return this.$message.error(err)
+        })
         this.menuList = res.data
-        console.log(res.data)
       },
       outLogin () {
         window.sessionStorage.clear()

@@ -60,13 +60,13 @@
           <template slot-scope="scope">
             <!--修改按钮-->
             <el-button type="primary" @click="findUser(scope.row.userId)" icon="el-icon-edit" size="mini"></el-button>
-            <!--删除按钮-->
-            <el-button type="danger" @click="deleteUser(scope.row.userId)" icon="el-icon-delete"
-                       size="mini"></el-button>
             <!--权限按钮-->
             <el-tooltip effect="dark" content="权限配置" placement="top" :enterable="false">
               <el-button type="warning" icon="el-icon-setting" size="mini"></el-button>
             </el-tooltip>
+            <!--删除按钮-->
+            <el-button type="danger" @click="deleteUser(scope.row.userId)" icon="el-icon-delete"
+                       size="mini"></el-button>
           </template>
         </el-table-column>
       </el-table>

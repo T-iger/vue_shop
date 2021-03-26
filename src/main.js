@@ -1,10 +1,19 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
-import './plugins/element.js'
-import './assets/css/global.css'
+// 按需导入element
+// import './plugins/element.js'
 // 导入axios
 import axios from 'axios'
+import './assets/css/global.css'
+// 全部导入
+import ElementUI from 'element-ui'
+import 'element-ui/lib/theme-chalk/index.css'
+
+Vue.use(ElementUI)
+
+/*import vRegion from 'v-region'
+Vue.use(vRegion)*/
 
 // 配置请求路径
 axios.defaults.baseURL = 'http://127.0.0.1:9999'

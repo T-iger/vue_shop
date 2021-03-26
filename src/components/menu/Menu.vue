@@ -1,66 +1,104 @@
 <template>
   <div>
+
+    <el-upload
+      ref="upload"
+      :auto-upload="false"
+      :file-list="fileList"
+      :on-preview="handlePreview"
+      :on-remove="handleRemove"
+      action="http://localhost:9999/upload/uploadFile"
+      class="upload-demo">
+      <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
+      <el-button size="small" style="margin-left: 10px;" type="success" @click="submitUpload">上传到服务器</el-button>
+      <div slot="tip" class="el-upload__tip" style="margin-bottom: 20px">提示</div>
+    </el-upload>
+
+<!--    <el-upload
+      action="http://localhost:9999/upload/uploadFile"
+      class="upload-demo"
+      drag
+      multiple>
+      <i class="el-icon-upload"></i>
+      <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+      <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
+    </el-upload>-->
+
     <!--面包屑导航-->
     <el-breadcrumb separator-class="el-icon-arrow-right">
       <el-breadcrumb-item :to="{ path: '/welcome' }">首页</el-breadcrumb-item>
-      <el-breadcrumb-item>角色管理</el-breadcrumb-item>
-      <el-breadcrumb-item>角色设置</el-breadcrumb-item>
+      <el-breadcrumb-item>菜单管理</el-breadcrumb-item>
+      <el-breadcrumb-item>菜单设置</el-breadcrumb-item>
     </el-breadcrumb>
     <!--卡片区域-->
     <el-card>
       <el-row :gutter="20">
         <el-col :span="6">
-          <el-input v-model="queryInfo.query" placeholder="请输入内容" clearable @clear="getRoleList">
-            <el-button slot="append" icon="el-icon-search" @click="getRoleList"></el-button>
+          <el-input v-model="queryInfo.query" clearable placeholder="请输入内容" @clear="getMenuList">
+            <el-button slot="append" icon="el-icon-search" @click="getMenuList"></el-button>
           </el-input>
         </el-col>
         <el-col :span="4">
         </el-col>
         <el-col :span="4">
-          <el-button type="primary" @click="roleDialog = true">添加角色</el-button>
+          <el-button type="primary" @click="roleDialog = true">添加菜单</el-button>
         </el-col>
       </el-row>
       <!--表格区域-->
-      <el-table border stripe :data="roleList">
+      <el-table :data="menuList" border stripe>
         <el-table-column type="index">
         </el-table-column>
         <!--<el-table-column type="selection" label="#">
         </el-table-column>-->
-        <el-table-column label="角色名" prop="roleName">
+        <el-table-column label="菜单名称" prop="menuName">
         </el-table-column>
-        <el-table-column label="创建者" prop="createUser.userName">
+        <el-table-column label="菜单icon" prop="icon">
         </el-table-column>
-        <el-table-column label="创建时间" prop="createTime">
+        <el-table-column label="菜单等级" prop="menuType">
+        </el-table-column>
+        <el-table-column label="状态">
+          <template slot-scope="scope">
+            <el-switch
+              v-model="scope.row.status"
+              :active-value="0"
+              :inactive-value="1"
+              active-color="#13ce66"
+              active-text="展示"
+              inactive-color="#ff4949"
+              inactive-text="隐藏"
+              @change="changeStatus(scope.row)">
+            </el-switch>
+          </template>
         </el-table-column>
         <el-table-column label="操作" width="180px">
           <template slot-scope="scope">
             <!--修改按钮-->
-            <el-button type="primary" @click="findRole(scope.row.roleId)" icon="el-icon-edit" size="mini"></el-button>
+            <el-button icon="el-icon-edit" size="mini" type="primary" @click="findMenu(scope.row.menuId)"></el-button>
             <!--权限按钮-->
-            <el-tooltip effect="dark" content="权限配置" placement="top" :enterable="false">
-              <el-button type="warning" @click="authorityDialog = true,getRoleMenuList(scope.row.roleId)"
-                         icon="el-icon-setting" size="mini"></el-button>
+            <el-tooltip :enterable="false" content="权限配置" effect="dark" placement="top">
+              <el-button icon="el-icon-setting" size="mini"
+                         type="warning" @click="authorityDialog = true,getRoleMenuList(scope.row.roleId)"></el-button>
             </el-tooltip>
             <!--删除按钮-->
-            <el-button type="danger" @click="deleteRole(scope.row.roleId)" icon="el-icon-delete"
-                       size="mini"></el-button>
+            <el-button icon="el-icon-delete" size="mini" type="danger"
+                       @click="deleteRole(scope.row.roleId)"></el-button>
           </template>
         </el-table-column>
       </el-table>
       <el-pagination
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
         :current-page="queryInfo.pageNum"
-        :page-sizes="[1, 2, 5, 10]"
         :page-size="queryInfo.pageSize"
+        :page-sizes="[1, 2, 5, 10]"
+        :total="total"
         layout="total, sizes, prev, pager, next, jumper"
-        :total="total">
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange">
       </el-pagination>
     </el-card>
     <!--新增角色-->
-    <el-dialog @close="clearAddForm" title="新增角色" :visible.sync="roleDialog">
-      <el-form status-icon ref="addRoleForm" :model="addRoleForm" :rules="addRoleFormRules">
-        <el-form-item prop="roleName" label="角色名称" :label-width="formLabelWidth" style="margin-right: 120px">
+    <el-dialog :visible.sync="roleDialog" title="新增角色" @close="clearAddForm">
+      <el-form ref="addRoleForm" :model="addRoleForm" :rules="addRoleFormRules" status-icon>
+        <el-form-item :label-width="formLabelWidth" label="角色名称" prop="roleName" style="margin-right: 120px">
           <el-input v-model="addRoleForm.roleName" autocomplete="off"></el-input>
         </el-form-item>
       </el-form>
@@ -70,15 +108,15 @@
       </div>
     </el-dialog>
     <!--角色权限配置-->
-    <el-dialog title="角色权限设置" :visible.sync="authorityDialog">
+    <el-dialog :visible.sync="authorityDialog" title="角色权限设置">
       <template>
         <el-tree
-          :data="menus"
-          show-checkbox
-          node-key="id"
           ref="tree"
-          lazy
+          :data="menus"
           :load="loadNode"
+          lazy
+          node-key="id"
+          show-checkbox
         >
         </el-tree>
       </template>
@@ -92,10 +130,11 @@
 
 <script>
 export default {
-  name: 'Role',
+  name: 'Menu',
   data () {
     return {
-      roleList: [],
+      fileList: [],
+      menuList: [],
       queryInfo: {
         query: '',
         pageNum: 1,
@@ -121,53 +160,36 @@ export default {
       },
       total: 10,
       roleDialog: false,
-      authorityDialog: false,
       formLabelWidth: '120px',
-      isIndeterminate: true,
-      // 全部菜单
-      menus: [{
-        id: 1,
-        label: '一级 1',
-        children: [{
-          id: 4,
-          label: '二级 1-1',
-          children: [{
-            id: 9,
-            label: '三级 1-1-1'
-          }, {
-            id: 10,
-            label: '三级 1-1-2'
-          }]
-        }]
-      }],
-      menus2: [{
-        id: 2,
-        label: '一级 1',
-        pid: 1
-      }],
-      roleId: ''
+      isIndeterminate: true
     }
   },
   methods: {
-    // 查找role详细信息
-    findRole (roleId) {
-      console.log(roleId)
+    submitUpload () {
+      this.$refs.upload.submit()
+    },
+    handleRemove (file, fileList) {
+      console.log(file, fileList)
+    },
+    handlePreview (file) {
+      console.log(file)
     },
     // 监听显示数改变
     handleSizeChange (newSize) {
       this.queryInfo.pageSize = newSize
-      this.getRoleList()
+      this.getMenuList()
     },
     // 监听页面值改变
     handleCurrentChange (newPage) {
       this.queryInfo.pageNum = newPage
-      this.getRoleList()
+      this.getMenuList()
     },
     // 获取角色list
-    getRoleList () {
-      this.$http.get('getRoleList', { params: this.queryInfo }).then(res => {
-        this.roleList = res.data.data.roleList
-        this.total = res.data.data.total
+    getMenuList () {
+      this.$http.get('/menu/menuList', { params: this.queryInfo }).then(res => {
+        console.log(res)
+        this.menuList = res.data.data
+        this.total = res.data.data.length
       })
     },
     // 删除角色
@@ -219,54 +241,10 @@ export default {
     },
     clearAddForm () {
       this.$refs.addRoleForm.resetFields()
-    },
-    // 获取menu，菜单
-    getRoleMenuList (roleId) {
-      this.roleId = roleId
-      this.$http.get('getRoleMenuList', {
-        params: {
-          roleId: roleId,
-          pId: ''
-        }
-      }).then(res => {
-        console.log(res)
-        this.menus = res.data.data
-      })
-    },
-    configAuthority () {
-      console.log(this.$refs.tree.getCheckedKeys())
-      this.$http.post('configAuthority', this.checkedMenus).catch(err => {
-        return this.$message.error(err)
-      }).then(
-        res => {
-          if (res.data.code !== 100) {
-            return this.$message.error(res.data.msg)
-          }
-          this.authorityDialog = false
-          this.$message.success(res.data.msg)
-        }
-      )
-    },
-    loadNode (node, resolve) {
-      // 如果展开第一级节点，从后台加载一级节点列表
-      if (node.level === 0) {
-        resolve(this.menus)
-      }
-      // 如果展开其他级节点，动态从后台加载下一级节点列表
-      if (node.level >= 1) {
-        this.$http.get('getRoleMenuList', {
-          params: {
-            roleId: this.roleId,
-            pId: node.data.id
-          }
-        }).then(res => {
-          resolve(res.data.data)
-        })
-      }
     }
   },
   created () {
-    this.getRoleList()
+    this.getMenuList()
   }
 }
 </script>

@@ -5,6 +5,7 @@ import Home from '../components/Home'
 import Welcome from '../components/Welcome'
 import User from '../components/user/User'
 import Role from '../components/role/Role'
+import Menu from '../components/menu/Menu'
 
 Vue.use(VueRouter)
 
@@ -30,6 +31,9 @@ const routes = [
     }, {
       path: '/role',
       component: Role
+    }, {
+      path: '/menu',
+      component: Menu
     }]
   }
 ]
